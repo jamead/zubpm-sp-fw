@@ -72,7 +72,7 @@ static void gendata_push(void *unused)
         msg.bba_xoff = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + BBA_XOFF_REG));
         msg.bba_yoff = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + BBA_YOFF_REG));
         msg.rf_atten = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + RF_DSA_REG) / 4);
-        msg.coarse_trig_dly = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + COARSE_TRIG_DLY_REG));
+        msg.coarse_trig_dly = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TRIG_DLY_REG));
         //msg.fine_trig_dly = Xil_In32(XPAR_M_AXI_BASEADDR + FINE_TRIG_DLY_REG);
 
         msg.trig_dmacnt = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TRIGCNT_REG));
@@ -83,8 +83,8 @@ static void gendata_push(void *unused)
         msg.trig_eventno = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_DMA_TRIGNUM_REG));
         msg.evr_ts_s_triglat = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_S_LAT_REG));
         msg.evr_ts_ns_triglat = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_NS_LAT_REG));
-        //msg.trigtobeam_thresh = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG);
-        //msg.trigtobeam_dly = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG);
+        msg.trigtobeam_thresh = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG));
+        msg.trigtobeam_dly = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG));
 
         dmastatus = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_STATUS_REG);
         msg.dma_adc_active = htonl((dmastatus & 0x10) >> 4);

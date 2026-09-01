@@ -65,6 +65,8 @@ end record t_reg_o_dsa;
 type t_reg_o_evr is record
    reset         : std_logic;
    dma_trigno    : std_logic_vector(7 downto 0);
+   tst_trigdly   : std_logic_vector(31 downto 0);
+   tst_trigwid   : std_logic_vector(31 downto 0);
    event_src_sel : std_logic;
 end record t_reg_o_evr;
 
@@ -222,6 +224,7 @@ end record t_reg_o_tbt;
 
 type t_reg_o_dma is record
     soft_trig    : std_logic;
+    trig_dly     : std_logic_vector(31 downto 0);
     trigsrc      : std_logic;
     testdata_enb : std_logic;
     adc_len      : std_logic_vector(31 downto 0);

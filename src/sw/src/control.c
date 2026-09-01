@@ -48,8 +48,8 @@ void set_geo_dly(u32 msgVal) {
 }
 
 
-void set_coarse_dly(u32 msgVal) {
-	Xil_Out32(XPAR_M_AXI_BASEADDR + COARSE_TRIG_DLY_REG, msgVal);
+void set_dma_trig_dly(u32 msgVal) {
+	Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TRIG_DLY_REG, msgVal+1);
 }
 
 
@@ -259,19 +259,14 @@ void reg_settings(void *msg) {
             set_gain(CHD,data.u);
             break;
 
-        case FINE_TRIG_DLY_MSG:
-          	xil_printf("Fine Trig Delay Message:   Value=%d\r\n",data.u);
-            //set_geo_dly(data.u);
+        case DMA_TRIG_DLY_MSG:
+          	xil_printf("Setting DMA Trig Delay Message:   Value=%d\r\n",data.u);
+            set_dma_trig_dly(data.u);
             break;
-
-        case COARSE_TRIG_DLY_MSG:
-          	xil_printf("Coarse Trig Delay Message:   Value=%d\r\n",data.u);
-          	//set_coarse_dly(data.u);
-           	break;
 
         case TRIGTOBEAM_THRESH_MSG:
            	xil_printf("Trigger to Beam Threshold Message:   Value=%d\r\n",data.u);
-          	//set_trigtobeam_thresh(data.u);
+          	set_trigtobeam_thresh(data.u);
            	break;
 
         case DDC_LPFILT_SEL_MSG:

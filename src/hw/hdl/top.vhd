@@ -193,8 +193,9 @@ architecture behv of top is
   signal fa_trig         : std_logic;
   signal sa_trig         : std_logic;
   signal sa_trig_stretch : std_logic;
-  signal ps_fpled_stretch: std_logic;
+  signal evr_dma_trig_stretch : std_logic;
   signal dma_trig        : std_logic;
+  signal tst_trig        : std_logic;
   signal dma_busy        : std_logic;
   
   signal ioc_access_led  : std_logic;
@@ -204,9 +205,10 @@ architecture behv of top is
 
   attribute mark_debug     : string;
   --attribute mark_debug of reg_o: signal is "true";
-  attribute mark_debug of dsa_clk: signal is "true";
-  attribute mark_debug of dsa_sdata: signal is "true";
-  attribute mark_debug of dsa_latch: signal is "true";  
+  attribute mark_debug of evr_dma_trig: signal is "true";
+  attribute mark_debug of tst_trig: signal is "true";
+  attribute mark_debug of reg_o_dma: signal is "true";  
+  attribute mark_debug of reg_o_evr: signal is "true";
   attribute mark_debug of adc_data: signal is "true";
   attribute mark_debug of adc_data_sw: signal is "true";
  
@@ -240,9 +242,9 @@ dbg(19) <= fp_in(3);
 
 
 fp_out(0) <= evr_tbt_trig; --fa_trig; --pl_clk0;
-fp_out(1) <= tbt_extclk; --afe_sw_rffe_p; --evr_rcvd_clk; 
-fp_out(2) <= tbt_trig; --adc_clk_in; --adc_clk; 
-fp_out(3) <= evr_rcvd_clk; --sw_rffe_time; --evr_rcvd_clk; --tbt_extclk; --tbt_trig; 
+fp_out(1) <= tst_trig; --tbt_extclk; --afe_sw_rffe_p; --evr_rcvd_clk; 
+fp_out(2) <= evr_dma_trig; --tbt_trig; --adc_clk_in; --adc_clk; 
+fp_out(3) <= tst_trig; --'0'; --evr_rcvd_clk; --sw_rffe_time; --evr_rcvd_clk; --tbt_extclk; --tbt_trig; 
 
 fp_led(7) <= dma_adc_active;
 fp_led(6) <= dma_tbt_active; 
@@ -250,7 +252,7 @@ fp_led(5) <= dma_fa_active;
 fp_led(4) <= dma_busy; 
 fp_led(3) <= not ad9510_status;
 fp_led(2) <= ioc_access_led; 
-fp_led(1) <= '0';
+fp_led(1) <= evr_dma_trig_stretch; --'0';
 fp_led(0) <= sa_trig_stretch;
 
 sfp_led(0) <= evr_gps_trig;
@@ -314,38 +316,38 @@ rffe_switcher: entity work.rffe_switch
 
 
 
-tbt_engine: entity work.tbt_dsp 
-  port map( 
-    rst => pl_reset, 
-    clk => adc_clk, 
-    adc_data => adc_data_sw, 
-    tbt_trig => tbt_trig, 
-    tbt_data => tbt_data,
-    tbt_params => reg_o_tbt
-);
+--tbt_engine: entity work.tbt_dsp 
+--  port map( 
+--    rst => pl_reset, 
+--    clk => adc_clk, 
+--    adc_data => adc_data_sw, 
+--    tbt_trig => tbt_trig, 
+--    tbt_data => tbt_data,
+--    tbt_params => reg_o_tbt
+--);
 
 
-sa_engine: entity work.sa_dsp
-  port map(
-    rst => pl_reset,
-    clk => adc_clk,
-    tbt_data => tbt_data,
-    tbt_trig => tbt_trig,
-    sa_trig => sa_trig, 
-    sa_data => sa_data
-);
+--sa_engine: entity work.sa_dsp
+--  port map(
+--    rst => pl_reset,
+--    clk => adc_clk,
+--    tbt_data => tbt_data,
+--    tbt_trig => tbt_trig,
+--    sa_trig => sa_trig, 
+--    sa_data => sa_data
+--);
 
 
-fa_engine: entity work.fa_dsp
-  port map(
-    rst => pl_reset,
-    clk => adc_clk,
-    tbt_data => tbt_data,
-    tbt_trig => tbt_trig,
-    fa_data => fa_data,
-    fa_cnt => open, 
-    fa_trig => fa_trig
-);
+--fa_engine: entity work.fa_dsp
+--  port map(
+--    rst => pl_reset,
+--    clk => adc_clk,
+--    tbt_data => tbt_data,
+--    tbt_trig => tbt_trig,
+--    fa_data => fa_data,
+--    fa_cnt => open, 
+--    fa_trig => fa_trig
+--);
 
 
 
@@ -536,11 +538,12 @@ evr: entity work.evr_top
     gth_rx_n => gth_evr_rx_n,
       
     --trignum => evr_dma_trignum, 
-    trigdly => (x"00000001"), 
+    trigdly =>  reg_o_dma.trig_dly, --(x"00000001"), 
     tbt_trig => evr_tbt_trig, 
     fa_trig => evr_fa_trig, 
     sa_trig => evr_sa_trig, 
-    usr_trig => evr_dma_trig, 
+    tst_trig => tst_trig, 
+    dma_trig => evr_dma_trig,
     gps_trig => evr_gps_trig, 
     timestamp => evr_ts,  
     evr_rcvd_clk => evr_rcvd_clk
@@ -643,9 +646,9 @@ pscmsg_led : entity work.stretch
   port map (
 	clk => pl_clk0,
 	reset => pl_reset, 
-	sig_in => ps_leds(0), 
+	sig_in => evr_dma_trig, 
 	len => 3000000, -- ~25ms;
-	sig_out => ps_fpled_stretch
+	sig_out => evr_dma_trig_stretch
 );	  	
 
 

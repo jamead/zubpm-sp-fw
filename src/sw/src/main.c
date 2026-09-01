@@ -174,8 +174,8 @@ static void on_startup(void *pvt, psc_key *key)
     (void)key;
     lstats_setup();
     brdstats_setup();
-    sadata_setup();
-    livedata_setup();
+    //sadata_setup();
+    //livedata_setup();
     dmadata_setup();
     gendata_setup();
     thermistor_setup();
@@ -198,8 +198,8 @@ static void realmain(void *arg)
 
     }
 
-    //discover_setup();
-    //tftp_setup();
+    discover_setup();
+    tftp_setup();
 
     const psc_config conf = {
         .port = 3000,
@@ -254,29 +254,15 @@ int main()
 	xil_printf("Init lmk1e2...\r\n");
     write_lmk61e2();
 
-    /*
-    ina226_init();
-    u16 reg_val;
-    float val, v, i, p;
-
-    while (1) {
-    	ina226_read_reg(0x00,&reg_val);
-    	printf("Config Reg: %x\n",reg_val);
-    	ina226_read_reg(0x05,&reg_val);
-    	printf("Calib Reg: %x\n",reg_val);
-    	ina226_read_reg(0xFE,&reg_val);
-    	printf("Manufacturer ID: %x\n",reg_val);
-        v = ina226_read_bus_voltage();
-        i = ina226_read_current();
-        p = ina226_read_power();
-        printf("INA226: V=%f   I=%f   P=%f\n",v,i,p);
-    	sleep(1);
+    //Set DMA Trig Delay to 1
+    Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TRIG_DLY_REG, 1);
 
 
+    //Set Test Trigger Width and Delay (used for gating the RF signal generator)
+    Xil_Out32(XPAR_M_AXI_BASEADDR + TEST_TRIG_DLY_REG, 1000);
+    Xil_Out32(XPAR_M_AXI_BASEADDR + TEST_TRIG_WID_REG, 10);
 
-       //sleep(1);
-    }
-    */
+
 
     // Disable Switching
     Xil_Out32(XPAR_M_AXI_BASEADDR + SWRFFE_ENB_REG, 0);
@@ -304,6 +290,13 @@ int main()
 	usleep(10);
 	Xil_Out32(XPAR_M_AXI_BASEADDR + EVR_RST_REG, 0);
     usleep(1000);
+
+    xil_printf("Setting Trigger Source to EVR\r\n");
+    Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TRIGSRC_REG, 0);
+
+    xil_printf("Setting Trigger Number to 32\r\n");
+    Xil_Out32(XPAR_M_AXI_BASEADDR + EVR_DMA_TRIGNUM_REG, 32);
+
 
     //read Timestamp
     for (i=0;i<5;i++) {

@@ -39,7 +39,8 @@ entity evr_top is
   tbt_trig       : out std_logic;
   fa_trig        : out std_logic;
   sa_trig        : out std_logic;
-  usr_trig       : out std_logic;
+  tst_trig       : out std_logic;
+  dma_trig       : out std_logic;
   gps_trig       : out std_logic;
   timestamp      : out std_logic_vector(63 downto 0);
     
@@ -188,7 +189,7 @@ end component;
    attribute mark_debug of cnt: signal is "true";
    attribute mark_debug of trigactive: signal is "true";
    attribute mark_debug of dma_trigno: signal is "true";
-   attribute mark_debug of usr_trig: signal is "true";
+   attribute mark_debug of tst_trig: signal is "true";
 
 
 
@@ -434,7 +435,7 @@ event_10KHz : entity work.event_rcv_chan  --EventReceiverChannel
 		
 		
 -- On demand 	
-event_usr : entity work.event_rcv_chan  --EventReceiverChannel
+event_dma : entity work.event_rcv_chan  --EventReceiverChannel
     port map(
        clock => gth_rxusr_clk,
        reset => sys_rst,
@@ -443,7 +444,21 @@ event_usr : entity work.event_rcv_chan  --EventReceiverChannel
        mydelay => trigdly, 
        mywidth => (x"00000175"),   -- //creates a pulse about 3us long
        mypolarity => ('0'),
-       trigger => usr_trig
+       trigger => dma_trig
+);
+
+
+-- On demand - no delay	
+event_usr : entity work.event_rcv_chan  --EventReceiverChannel
+    port map(
+       clock => gth_rxusr_clk,
+       reset => sys_rst,
+       eventstream => eventstream,
+       myevent => dma_trigno, --reg_o.dma_trigno, --trignum,
+       mydelay => reg_o.tst_trigdly, --(x"00000001"), --trigdly, 
+       mywidth => reg_o.tst_trigwid, --(x"00000175"),   -- //creates a pulse about 3us long
+       mypolarity => ('0'),
+       trigger => tst_trig
 );
 
 

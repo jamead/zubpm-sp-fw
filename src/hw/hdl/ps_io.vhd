@@ -132,6 +132,7 @@ reg_o_dma.tbt_len <= reg_o.dma_tbt_len.data.data;
 reg_o_dma.fa_enb <= reg_o.dma_fa_enb.data.data(0); 
 reg_o_dma.fa_len <= reg_o.dma_fa_len.data.data;
 reg_o_dma.txtoioc_done <= reg_o.dma_txtoioc_done.data.data(0);
+reg_o_dma.trig_dly <= reg_o.dma_trig_delay.val.data;
 
 reg_i.dma_trigcnt.data.data <= reg_i_dma.trig_cnt;
 reg_i.dma_status.data.data <= reg_i_dma.status; 
@@ -144,6 +145,9 @@ reg_i.dma_ts_s.val.data <= reg_i_dma.ts_s; --x"ba5eba11";
 reg_o_evr.reset <= reg_o.evr_reset.data.data(0);
 reg_o_evr.dma_trigno <= reg_o.dma_trig_eventno.val.data;
 reg_o_evr.event_src_sel <= reg_o.event_src_sel.val.data(0);
+
+reg_o_evr.tst_trigdly <= reg_o.test_trig_delay.val.data;
+reg_o_evr.tst_trigwid <= reg_o.test_trig_width.val.data;
 
 
 reg_i.sa_cnt.data.data <= sa_data.cnt;

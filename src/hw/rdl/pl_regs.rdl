@@ -328,7 +328,7 @@ reg {
  
  
  
- /* 10Hz Position Registers */
+ /* 10Hz Registers */
  
  reg {
     desc="SA Counter";
@@ -386,6 +386,20 @@ reg {
     field {} data[32];
   } sa_sum @0xDC;
 
+
+reg {
+    desc="Trig to beam delay";
+    default sw = rw;
+    default hw = r;
+    field {} data[32];
+  } trigtobeam_dly @0xF0;
+  
+reg {
+    desc="Trig to beam thresh";
+    default sw = rw;
+    default hw = r;
+    field {} data[32];
+  } trigtobeam_thresh @0xF4;
 
 
 
@@ -548,6 +562,21 @@ reg {
     default hw = r;
     field {} val[1];
   } event_src_sel @0x168;  
+ 
+ 
+ reg {
+    desc="Test Trigger Delay";
+    default sw = rw;
+    default hw = r;
+    field {} val[32];
+  } test_trig_delay @0x170;  
+ 
+ reg {
+    desc="Test Trigger Width";
+    default sw = rw;
+    default hw = r;
+    field {} val[32];
+  } test_trig_width @0x174;   
  
  
  

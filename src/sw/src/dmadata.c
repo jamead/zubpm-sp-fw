@@ -2,6 +2,7 @@
 // Trigger and Send DMA Data: ADC, TbT, FA
 
 #include <stdio.h>
+#include <math.h>
 
 #include <xparameters.h>
 
@@ -24,7 +25,7 @@
 void dma_arm() {
 
 	//u32 *adc_ptr, *tbt_ptr, *fa_ptr;
-	u32 adclen, tbtlen, falen;
+	u32 adclen;
 
 	xil_printf("Arming DMA...\r\n");
 	//Disable the ADC,TbT,FA DMA logic (trig_logic.vhd)
@@ -36,12 +37,12 @@ void dma_arm() {
 
 	//Read the DMA length registers, just so we can print them
 	adclen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_ADCBURSTLEN_REG);
-	tbtlen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG);
-	falen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG);
+	//tbtlen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG);
+	//falen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG);
 
 	xil_printf("   DMA ADC Length = %d\r\n",adclen);
-	xil_printf("   DMA TbT Length = %d\r\n",tbtlen);
-	xil_printf("   DMA FA Length = %d\r\n",falen);
+	//xil_printf("   DMA TbT Length = %d\r\n",tbtlen);
+	//xil_printf("   DMA FA Length = %d\r\n",falen);
 
 	//clear the DMA memory, not necessary, already Invalidated it.
 	//adc_ptr = (u32 *) ADC_DMA_DATA;
@@ -58,18 +59,18 @@ void dma_arm() {
 
 	//reset the AXI DMA Core
 	Xil_Out32(XPAR_AXI_DMA_ADC_BASEADDR + S2MM_DMACR, 4);
-	Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DMACR, 4);
-	Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DMACR, 4);
+	//Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DMACR, 4);
+	//Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DMACR, 4);
 
 	//Start the S2MM channel with all interrupts masked
 	Xil_Out32(XPAR_AXI_DMA_ADC_BASEADDR + S2MM_DMACR, 0xF001);
-	Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DMACR, 0xF001);
-	Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DMACR, 0xF001);
+	//Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DMACR, 0xF001);
+	//Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DMACR, 0xF001);
 
 	//Write the Destination Address for the ADC data
 	Xil_Out32(XPAR_AXI_DMA_ADC_BASEADDR + S2MM_DA, ADC_DMA_DATA);
-	Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DA, TBT_DMA_DATA);
-	Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DA, FA_DMA_DATA);
+	//Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_DA, TBT_DMA_DATA);
+	//Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_DA, FA_DMA_DATA);
 
 
 	//Write the S2MM transfer length (must be written last (PG021 p72)
@@ -77,10 +78,10 @@ void dma_arm() {
 	Xil_Out32(XPAR_AXI_DMA_ADC_BASEADDR + S2MM_LEN, (adclen+16) * 4 * 2);
 
 	//length is in bytes, for TbT: 16 - 4 byte values
-	Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_LEN, (tbtlen) * 16 * 4);
+	//Xil_Out32(XPAR_AXI_DMA_TBT_BASEADDR + S2MM_LEN, (tbtlen) * 16 * 4);
 
 	//length is in bytes, for FA: 10 - 4 byte values
-	Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_LEN, (falen) * 10 * 4);
+	//Xil_Out32(XPAR_AXI_DMA_FA_BASEADDR + S2MM_LEN, (falen) * 10 * 4);
 
 
 	//Enable the ADC,TbT,FA DMA logic (trig_logic.vhd)
@@ -93,95 +94,7 @@ void dma_arm() {
 
 }
 
-void process_FA_dma(famsg_t *famsg, u32 nsamples)
-{
-    u32 i;
-
-    u32 *fa_data = (u32 *)FA_DMA_DATA;
-
-    // Read samples from DMA buffer
-    for (i = 0; i < nsamples; i++) {
-        famsg[i].hdr = htonl(*fa_data++);
-        famsg[i].cnt = htonl(*fa_data++);
-        famsg[i].cha_mag = htonl(*fa_data++);
-        famsg[i].chb_mag = htonl(*fa_data++);
-        famsg[i].chc_mag = htonl(*fa_data++);
-        famsg[i].chd_mag = htonl(*fa_data++);
-        famsg[i].rsvd = htonl(*fa_data++);
-        famsg[i].sum = htonl(*fa_data++);
-        famsg[i].xpos_nm = htonl(*fa_data++);
-        famsg[i].ypos_nm = htonl(*fa_data++);
-
-    }
-
-    // Debug print first 10
-    /*
-    for (i = 0; i < 10 && i < nsamples; i++) {
-        xil_printf("FA Sample %lu: %8d  %8d  %8d  %8d\r\n",
-                   (unsigned long)i,
-                   ntohs(famsg[i].cha_mag),
-                   ntohs(famsg[i].chb_mag),
-                   ntohs(famsg[i].chc_mag),
-                   ntohs(famsg[i].chd_mag));
-    }
-    */
-
-    psc_send(the_server, 55, nsamples * sizeof(famsg_t), famsg);
-}
-
-
-
-
-
-
-
-void process_TbT_dma(tbtmsg_t *tbtmsg, u32 nsamples)
-{
-    u32 i;
-
-    u32 *tbt_data = (u32 *)TBT_DMA_DATA;
-
-    // Read samples from DMA buffer
-    for (i = 0; i < nsamples; i++) {
-        tbtmsg[i].hdr = htonl(*tbt_data++);
-        tbtmsg[i].cnt = htonl(*tbt_data++);
-        tbtmsg[i].cha_mag = htonl(*tbt_data++);
-        tbtmsg[i].cha_phs = htonl(*tbt_data++);
-        tbtmsg[i].chb_mag = htonl(*tbt_data++);
-        tbtmsg[i].chb_phs = htonl(*tbt_data++);
-        tbtmsg[i].chc_mag = htonl(*tbt_data++);
-        tbtmsg[i].chc_phs = htonl(*tbt_data++);
-        tbtmsg[i].chd_mag = htonl(*tbt_data++);
-        tbtmsg[i].chd_phs = htonl(*tbt_data++);
-        tbtmsg[i].xpos_raw = htonl(*tbt_data++);
-        tbtmsg[i].ypos_raw = htonl(*tbt_data++);
-        tbtmsg[i].rsvd = htonl(*tbt_data++);
-        tbtmsg[i].sum = htonl(*tbt_data++);
-        tbtmsg[i].xpos_nm = htonl(*tbt_data++);
-        tbtmsg[i].ypos_nm = htonl(*tbt_data++);
-
-    }
-
-    // Debug print first 10
-    /*
-    for (i = 0; i < 10 && i < nsamples; i++) {
-        xil_printf("Sample %lu: %8d  %8d  %8d  %8d\r\n",
-                   (unsigned long)i,
-                   ntohs(tbtmsg[i].cha_mag),
-                   ntohs(tbtmsg[i].chb_mag),
-                   ntohs(tbtmsg[i].chc_mag),
-                   ntohs(tbtmsg[i].chd_mag));
-    }
-    */
-
-    // Send buffer (size = nsamples * sizeof(adcmsg_t))
-    psc_send(the_server, 54, nsamples * sizeof(tbtmsg_t), tbtmsg);
-}
-
-
-
-
-void process_ADC_dma(adcmsg_t *adcmsg, u32 nsamples)
+void read_ADC_dma(adcmsg_t *adcmsg, u32 nsamples)
 {
     u32 i, regval;
     s16 cha, chb, chc, chd;
@@ -197,10 +110,41 @@ void process_ADC_dma(adcmsg_t *adcmsg, u32 nsamples)
         chc = (s16)((regval >> 16) & 0xFFFF);
         chd = (s16)(regval & 0xFFFF);
 
-        adcmsg[i].cha = htons(cha);
-        adcmsg[i].chb = htons(chb);
-        adcmsg[i].chc = htons(chc);
-        adcmsg[i].chd = htons(chd);
+        adcmsg[i].cha = cha;
+        adcmsg[i].chb = chb;
+        adcmsg[i].chc = chc;
+        adcmsg[i].chd = chd;
+    }
+
+    // Debug print first 10
+    /*
+    for (i = 0; i < 10 && i < nsamples; i++) {
+        xil_printf("Sample %lu: A=%d  B=%d  C=%d  D=%d\r\n",
+                   (unsigned long)i,
+                   ntohs(adcmsg[i].cha),
+                   ntohs(adcmsg[i].chb),
+                   ntohs(adcmsg[i].chc),
+                   ntohs(adcmsg[i].chd));
+    }
+    */
+
+
+}
+
+
+
+
+
+void send_ADC_dma(adcmsg_t *adcmsg, u32 nsamples)
+{
+    u32 i;
+
+    // Convert to network order
+    for (i = 0; i < nsamples; i++) {
+        adcmsg[i].cha = htons(adcmsg[i].cha);
+        adcmsg[i].chb = htons(adcmsg[i].chb);
+        adcmsg[i].chc = htons(adcmsg[i].chc);
+        adcmsg[i].chd = htons(adcmsg[i].chd);
     }
 
     // Debug print first 10
@@ -220,6 +164,109 @@ void process_ADC_dma(adcmsg_t *adcmsg, u32 nsamples)
 }
 
 
+static void scale_ADC_data(adcmsg_t *samples,
+                           u32 nsamples,
+                           const adc_gain_t *gain)
+{
+
+    for (u32 i = 0; i < nsamples; i++) {
+        samples[i].cha =  samples[i].cha * gain->cha;
+        samples[i].chb =  samples[i].chb * gain->chb;
+        samples[i].chc =  samples[i].chc * gain->chc;
+        samples[i].chd =  samples[i].chd * gain->chd;
+    }
+
+}
+
+
+
+
+
+
+/*  Calculate the average ADC baseline.  */
+static adc_baseline_t calculate_baselines(const adcmsg_t *adc,
+                                          size_t first_sample,
+                                          size_t sample_count)
+{
+    int64_t sum_a = 0;
+    int64_t sum_b = 0;
+    int64_t sum_c = 0;
+    int64_t sum_d = 0;
+
+    adc_baseline_t baseline = {0};
+
+    if ((adc == NULL) || (sample_count == 0)) {
+        return baseline;
+    }
+
+    for (size_t i = first_sample;
+         i < first_sample + sample_count;
+         i++) {
+        sum_a += adc[i].cha;
+        sum_b += adc[i].chb;
+        sum_c += adc[i].chc;
+        sum_d += adc[i].chd;
+    }
+
+    baseline.cha = (float)sum_a / (float)sample_count;
+    baseline.chb = (float)sum_b / (float)sample_count;
+    baseline.chc = (float)sum_c / (float)sample_count;
+    baseline.chd = (float)sum_d / (float)sample_count;
+
+    return baseline;
+}
+
+
+
+/*  Calculate the absolute sum of the ADC samples  */
+static void sum_absolute_adc(const adcmsg_t *samples,
+                             const adc_baseline_t *baseline,
+                             u32 first_sample,
+                             u32 sample_count,
+                             u32 total_samples,
+                             adc_sum_t *result)
+{
+
+    result->cha = 0.0f;
+    result->chb = 0.0f;
+    result->chc = 0.0f;
+    result->chd = 0.0f;
+
+    const u32 end_sample = first_sample + sample_count;
+
+    for (u32 i = first_sample; i < end_sample; i++) {
+    	//xil_printf("Sample: %d = %d\r\n",i,samples[i]);
+        result->cha += fabsf((float)samples[i].cha - baseline->cha);
+        result->chb += fabsf((float)samples[i].chb - baseline->chb);
+        result->chc += fabsf((float)samples[i].chc - baseline->chc);
+        result->chd += fabsf((float)samples[i].chd - baseline->chd);
+    }
+
+
+}
+
+
+
+static s32 find_adc_signal_start(const adcmsg_t *adc,
+                                 u32 nsamples,
+                                 s16 threshold)
+{
+    for (u32 i = 0; i < nsamples; i++) {
+
+        if ((abs(adc[i].cha) > threshold) ||
+            (abs(adc[i].chb) > threshold) ||
+            (abs(adc[i].chc) > threshold) ||
+            (abs(adc[i].chd) > threshold)) {
+
+            return (s32)i;
+        }
+    }
+
+    return -1;      // no signal found
+}
+
+
+
 
 
 
@@ -228,20 +275,37 @@ static void dmadata_push(void *unused)
 {
     (void)unused;
 
-    static adcmsg_t adcmsg[ADC_DMA_MAX_LEN];
-    static tbtmsg_t tbtmsg[TBT_DMA_MAX_LEN];
-    static famsg_t  famsg[FA_DMA_MAX_LEN];
+    static struct {
+       	u32 count;        // PSC Offset 0
+        u32 evr_ts_ns;    // PSC Offset 4
+       	u32 evr_ts_s;     // PSC Offset 8
+       	u32 cha_mag;      // PSC Offset 12
+       	u32 chb_mag;      // PSC Offset 16
+       	u32 chc_mag;      // PSC Offset 20
+       	u32 chd_mag;      // PSC Offset 24
+       	u32 sum;          // PSC Offset 28
+       	s32 xpos_nm;      // PSC Offset 32
+       	s32 ypos_nm;      // PSC Offset 36
+    } msg;
 
-    u32 adclen, tbtlen, falen;
+
+    static adcmsg_t adcmsg[ADC_DMA_MAX_LEN];
+    adc_baseline_t baseline;
+    adc_sum_t adc_sum;
+    adc_gain_t adc_gain;
+    u32 thresh;
+    s32 bba_x, bba_y;
+
+    u32 adclen;
     u32 trignum = 0, prevtrignum = 0;
+
+    float sum;
+    u32 kx = 1;
+    u32 ky = 1;
+    float xpos, ypos;
 
 
     dma_arm();
-	//Read the DMA length registers
-	//adclen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_ADCBURSTLEN_REG);
-	//tbtlen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG);
-	//falen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG);
-
 
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -251,6 +315,19 @@ static void dmadata_push(void *unused)
 
         if (trignum != prevtrignum) {
             xil_printf("Received DMA Trigger Number: %d \r\n",trignum);
+
+            //read Kx, Ky (in nm)
+            kx = Xil_In32(XPAR_M_AXI_BASEADDR + KX_REG);
+            ky = Xil_In32(XPAR_M_AXI_BASEADDR + KY_REG);
+            //xil_printf("Kx=%d  Ky=%d\r\n",kx,ky);
+
+            //read the gain registers
+            adc_gain.cha = (float)Xil_In32(XPAR_M_AXI_BASEADDR + CHA_GAIN_REG) / 32767.0;
+            adc_gain.chb = (float)Xil_In32(XPAR_M_AXI_BASEADDR + CHB_GAIN_REG) / 32767.0;
+            adc_gain.chc = (float)Xil_In32(XPAR_M_AXI_BASEADDR + CHC_GAIN_REG) / 32767.0;
+            adc_gain.chd = (float)Xil_In32(XPAR_M_AXI_BASEADDR + CHD_GAIN_REG) / 32767.0;
+            //printf("Gains: ChA=%f  ChB=%f  ChC=%f  ChD=%f\r\n",adc_gain.cha,adc_gain.chb,adc_gain.chc,adc_gain.chd);
+
             //Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_ADCENABLE_REG, 0);
             //Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TBTENABLE_REG, 0);
             //Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_FAENABLE_REG, 0);
@@ -260,29 +337,76 @@ static void dmadata_push(void *unused)
 
             // Invalidate caches to see fresh DMA data
             Xil_DCacheInvalidateRange(ADC_DMA_DATA, ADC_DMA_MAX_LEN * sizeof(adcmsg_t));
-            Xil_DCacheInvalidateRange(TBT_DMA_DATA, TBT_DMA_MAX_LEN * sizeof(tbtmsg_t));
-            Xil_DCacheInvalidateRange(FA_DMA_DATA, FA_DMA_MAX_LEN * sizeof(famsg_t));
+
 
             // get the DMA lengths
            	adclen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_ADCBURSTLEN_REG);
-        	tbtlen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG);
-        	falen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG);
+
 
             // Process DMA data into adcmsg array
-            process_ADC_dma(adcmsg, adclen);
+            read_ADC_dma(adcmsg, adclen);
+            thresh = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG);
+            xil_printf("Read Threshold Reg: %d\r\n",thresh);
+            s32 signal_start = find_adc_signal_start(adcmsg, adclen, thresh);
+            xil_printf("Signal start sample = %ld\r\n", (long)signal_start);
+            Xil_Out32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG, signal_start);
 
-            // Process DMA data into tbtmsg array
-            process_TbT_dma(tbtmsg, tbtlen);
+            scale_ADC_data(adcmsg, adclen, &adc_gain);
 
-            // Process DMA data into tbtmsg array
-            process_FA_dma(famsg, falen);
+
+            baseline = calculate_baselines(adcmsg, 0, 50);
+            //printf("Baselines: ChA=%.1f, ChB=%.1f, ChC=%.1f, ChD=%.1f\r\n",
+            //		baseline.cha, baseline.chb, baseline.chc, baseline.chd);
+
+            sum_absolute_adc(adcmsg, &baseline, 50, 250, adclen, &adc_sum);
+            //printf("Sum      : ChA=%.1f, ChB=%.1f, ChC=%.1f, ChD=%.1f\r\n",
+            //		adc_sum.cha, adc_sum.chb, adc_sum.chc, adc_sum.chd);
+
+            //Calculate position
+            sum = adc_sum.cha + adc_sum.chb + adc_sum.chc + adc_sum.chd;
+
+            if (sum > 0.0f) {
+                xpos = kx * (((adc_sum.cha + adc_sum.chd) -
+                              (adc_sum.chb + adc_sum.chc)) / sum);
+
+                ypos = ky * (((adc_sum.cha + adc_sum.chb) -
+                              (adc_sum.chc + adc_sum.chd)) / sum);
+            } else {
+                xpos = 0.0f;
+                ypos = 0.0f;
+            }
+            //printf("Xpos = %.3f    Ypos = %.3f\r\n\r\n",xpos, ypos);
+
+            // Process DMA data into adcmsg array
+            send_ADC_dma(adcmsg, adclen);
+
+
+            //prepare and send the psc position data packet
+            msg.count = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + SA_TRIGNUM_REG));
+            msg.evr_ts_ns = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_NS_REG));
+            msg.evr_ts_s = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_S_REG));
+
+            msg.cha_mag = htonl((u32)adc_sum.cha);
+            msg.chb_mag = htonl((u32)adc_sum.chb);
+            msg.chc_mag = htonl((u32)adc_sum.chc);
+            msg.chd_mag = htonl((u32)adc_sum.chd);
+
+            msg.sum = htonl((u32)sum);
+
+
+            bba_x = Xil_In32(XPAR_M_AXI_BASEADDR + BBA_XOFF_REG);
+            bba_y = Xil_In32(XPAR_M_AXI_BASEADDR + BBA_YOFF_REG);
+
+            msg.xpos_nm = htonl((s32)(xpos - bba_x));
+            msg.ypos_nm = htonl((s32)(ypos - bba_y));
+
+
+            psc_send(the_server, 31, sizeof(msg), &msg);
+
 
             // Clear DMA Trigger Latch, allows for next trigger
             Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TXTOIOC_DONE_REG, 1);
             Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TXTOIOC_DONE_REG, 0);
-
-
-
 
             // Re-arm DMA for next trigger
             dma_arm();

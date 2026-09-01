@@ -78,6 +78,7 @@ static void lstats_push(void *unused)
 
         // uptime as float32
         msg.uptime = htonf((xTaskGetTickCount() * 1.0f) / configTICK_RATE_HZ);
+        printf("%f\r\n",((xTaskGetTickCount() * 1.0f) / configTICK_RATE_HZ));
         msg.nthread = htonl(uxTaskGetNumberOfTasks());
 
         msg.link.xmit = htonl(lwip_stats.link.xmit);

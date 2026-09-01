@@ -15,6 +15,28 @@ typedef struct {
     s16 chd;   // channel D
 } adcmsg_t;
 
+typedef struct {
+    float cha;
+    float chb;
+    float chc;
+    float chd;
+} adc_baseline_t;
+
+typedef struct {
+    float cha;
+    float chb;
+    float chc;
+    float chd;
+} adc_sum_t;
+
+
+typedef struct {
+    float cha;
+    float chb;
+    float chc;
+    float chd;
+} adc_gain_t;
+
 
 // One TbT sample
 typedef struct {
