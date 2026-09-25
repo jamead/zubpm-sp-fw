@@ -1,4 +1,7 @@
 
+#define ADC_CLOCK_FREQ_HZ  117349100.0
+#define EVR_CLOCK_FREQ_HZ  124921924.0
+
 #define RFATTEN 0
 #define PTATTEN 1
 #define HOR 0

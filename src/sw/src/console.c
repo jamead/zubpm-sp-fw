@@ -105,41 +105,18 @@ void dump_eeprom(void)
 
 
 
-void set_resolution(void)
+void machine_sel(void)
 {
   u8 val;
 
-  xil_printf("\r\nSet Resolution of PSC: 0=MS (18bit), 1=HS (20bit)");
+  xil_printf("\r\nzuBPM Location: 0 = SR,  1 = Booster");
   if ((val = get_binary_input()) != (u8)-1) {
-     i2c_eeprom_writeBytes(48, &val, 1);
+     i2c_eeprom_writeBytes(0x20, &val, 1);
      xil_printf("Reboot for settings to take effect\r\n");
   }
 }
 
 
-void program_ip(void)
-{
-  xil_printf("\r\nProgram IP address into EEPROM\r\n");
-  xil_printf("\r\nEnter an IP address (format: x.x.x.x):  ");
-  menu_get_ipaddr(ip_settings.ipaddr);
-  xil_printf("\r\nEnter a Netmask (format: x.x.x.x):  ");
-  menu_get_ipaddr(ip_settings.ipmask);
-  xil_printf("\r\nEnter an Gateway address (format: x.x.x.x):  ");
-  menu_get_ipaddr(ip_settings.ipgw);
-  xil_printf("\r\n");
-  xil_printf("IP Addr: %u.%u.%u.%u\r\n",ip_settings.ipaddr[0],ip_settings.ipaddr[1],ip_settings.ipaddr[2],ip_settings.ipaddr[3]);
-  xil_printf("Netmask: %u.%u.%u.%u\r\n",ip_settings.ipmask[0],ip_settings.ipmask[1],ip_settings.ipmask[2],ip_settings.ipmask[3]);
-  xil_printf("Gateway: %u.%u.%u.%u\r\n",ip_settings.ipgw[0],ip_settings.ipgw[1],ip_settings.ipgw[2],ip_settings.ipgw[3]);
-
-  i2c_eeprom_writeBytes(0, ip_settings.ipaddr, 4);
-  usleep(100000);
-  i2c_eeprom_writeBytes(16, ip_settings.ipmask, 4);
-  usleep(100000);
-  i2c_eeprom_writeBytes(32, ip_settings.ipgw, 4);
-  usleep(100000);
-  xil_printf("Reboot for settings to take effect\r\n");
-
-}
 
 // Read a line (blocking) from UART into buffer
 void uart_read_line(char *buffer, int max_len) {
@@ -293,16 +270,15 @@ void console_menu()
 
     static const menu_entry_t menu[] = {
 	    {'A', "Dump EEPROM", dump_eeprom},
-		{'B', "Program IP Settings", program_ip},
-		{'C', "Set Resolution (HS or MS)", set_resolution},
-		{'D', "Reboot", reboot},
-	    {'F', "Print FreeRTOS Stats",  printTaskStats},
+		{'B', "Machine Select", machine_sel},
+		{'C', "Reboot", reboot},
+	    {'D', "Print FreeRTOS Stats",  printTaskStats},
 	};
 	static const size_t menulen = sizeof(menu)/sizeof(menu_entry_t);
 
 	xil_printf("Running PSC Menu (len = %ld)\r\n", menulen);
 
-	exec_menu("Select an option:", menu, menulen);
+	exec_menu("zuBPM console options:", menu, menulen);
 
 	}
 

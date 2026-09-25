@@ -390,7 +390,7 @@ reg {
 reg {
     desc="Trig to beam delay";
     default sw = rw;
-    default hw = r;
+    default hw = w;
     field {} data[32];
   } trigtobeam_dly @0xF0;
   

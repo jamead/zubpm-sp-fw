@@ -27,7 +27,7 @@ void dma_arm() {
 	//u32 *adc_ptr, *tbt_ptr, *fa_ptr;
 	u32 adclen;
 
-	xil_printf("Arming DMA...\r\n");
+	//xil_printf("Arming DMA...\r\n");
 	//Disable the ADC,TbT,FA DMA logic (trig_logic.vhd)
 	//xil_printf("   Disable DMA\r\n");
 	//Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_ADCENABLE_REG, 0);
@@ -40,7 +40,7 @@ void dma_arm() {
 	//tbtlen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG);
 	//falen = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG);
 
-	xil_printf("   DMA ADC Length = %d\r\n",adclen);
+	//xil_printf("   DMA ADC Length = %d\r\n",adclen);
 	//xil_printf("   DMA TbT Length = %d\r\n",tbtlen);
 	//xil_printf("   DMA FA Length = %d\r\n",falen);
 
@@ -293,7 +293,7 @@ static void dmadata_push(void *unused)
     adc_baseline_t baseline;
     adc_sum_t adc_sum;
     adc_gain_t adc_gain;
-    u32 thresh;
+    u32 thresh, beamdly;
     s32 bba_x, bba_y;
 
     u32 adclen;
@@ -347,9 +347,16 @@ static void dmadata_push(void *unused)
             read_ADC_dma(adcmsg, adclen);
             thresh = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG);
             xil_printf("Read Threshold Reg: %d\r\n",thresh);
-            s32 signal_start = find_adc_signal_start(adcmsg, adclen, thresh);
-            xil_printf("Signal start sample = %ld\r\n", (long)signal_start);
-            Xil_Out32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG, signal_start);
+            beamdly = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG);
+            xil_printf("Beam Delay Reg: %d\r\n",beamdly);
+            //scale beamdly to EVR clocks (it is in ADC clocks)
+            beamdly = (int)((double)beamdly * EVR_CLOCK_FREQ_HZ / ADC_CLOCK_FREQ_HZ);
+            xil_printf("Beam Delay (in EVR clocks): %d\r\n",beamdly);
+
+
+            //s32 signal_start = find_adc_signal_start(adcmsg, adclen, thresh);
+            //xil_printf("Signal start sample = %ld\r\n", (long)signal_start);
+            //Xil_Out32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG, signal_start);
 
             scale_ADC_data(adcmsg, adclen, &adc_gain);
 

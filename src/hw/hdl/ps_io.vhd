@@ -17,34 +17,36 @@ use work.bpm_package.ALL;
 
 entity ps_io is
   port (  
-     pl_clock         : in std_logic;
-     pl_reset         : in std_logic;
+     pl_clock          : in std_logic;
+     pl_reset          : in std_logic;
    
-     m_axi4_m2s       : in t_pl_regs_m2s;
-     m_axi4_s2m       : out t_pl_regs_s2m;   
+     m_axi4_m2s        : in t_pl_regs_m2s;
+     m_axi4_s2m        : out t_pl_regs_s2m;   
      
-     adc_data        : in t_adc_raw;
-     sa_data         : in t_sa_data;
+     adc_data         : in t_adc_raw;
+     sa_data          : in t_sa_data;
      
-	 reg_o_dsa       : out t_reg_o_dsa;
-	 reg_o_therm     : out t_reg_o_therm;
-	 reg_i_therm     : in  t_reg_i_therm;
-	 reg_o_pll       : out t_reg_o_pll;
-	 reg_i_pll       : in  t_reg_i_pll;
-	 reg_o_tbt       : out t_reg_o_tbt;	
-	 reg_o_adcfifo   : out t_reg_o_adc_fifo_rdout;
-	 reg_i_adcfifo   : in  t_reg_i_adc_fifo_rdout; 
-	 reg_o_tbtfifo   : out t_reg_o_tbt_fifo_rdout;
-	 reg_i_tbtfifo   : in  t_reg_i_tbt_fifo_rdout; 	
-	 reg_o_dma       : out t_reg_o_dma; 
-	 reg_i_dma       : in  t_reg_i_dma;
-	 reg_o_adc       : out t_reg_o_adc_cntrl;
-	 reg_i_adc       : in  t_reg_i_adc_status; 
-	 reg_o_evr       : out t_reg_o_evr;
-	 reg_i_evr       : in  t_reg_i_evr;
-	 reg_o_swrffe    : out t_reg_o_swrffe;
-     ioc_access_led  : out std_logic;
-     fp_leds         : out std_logic_vector(7 downto 0)
+	 reg_o_dsa        : out t_reg_o_dsa;
+	 reg_o_therm      : out t_reg_o_therm;
+	 reg_i_therm      : in  t_reg_i_therm;
+	 reg_o_pll        : out t_reg_o_pll;
+	 reg_i_pll        : in  t_reg_i_pll;
+	 reg_o_tbt        : out t_reg_o_tbt;	
+	 reg_o_adcfifo    : out t_reg_o_adc_fifo_rdout;
+	 reg_i_adcfifo    : in  t_reg_i_adc_fifo_rdout; 
+	 reg_o_tbtfifo    : out t_reg_o_tbt_fifo_rdout;
+	 reg_i_tbtfifo    : in  t_reg_i_tbt_fifo_rdout; 	
+	 reg_o_dma        : out t_reg_o_dma; 
+	 reg_i_dma        : in  t_reg_i_dma;
+	 reg_o_adc        : out t_reg_o_adc_cntrl;
+	 reg_i_adc        : in  t_reg_i_adc_status; 
+	 reg_o_evr        : out t_reg_o_evr;
+	 reg_i_evr        : in  t_reg_i_evr;
+	 reg_o_swrffe     : out t_reg_o_swrffe;
+     ioc_access_led   : out std_logic;
+     trig2beam_thresh : out std_logic_vector(15 downto 0);
+     trig2beam_dly    : in std_logic_vector(31 downto 0);
+     fp_leds          : out std_logic_vector(7 downto 0)
   );
 end ps_io;
 
@@ -58,8 +60,9 @@ architecture behv of ps_io is
   signal reg_o        : t_addrmap_pl_regs_out;
   signal ioc_access   : std_logic;
 
-  --attribute mark_debug     : string;
-  --attribute mark_debug of reg_o: signal is "true";
+  attribute mark_debug     : string;
+  attribute mark_debug of trig2beam_thresh: signal is "true";
+  attribute mark_debug of trig2beam_dly: signal is "true";
 
 
 
@@ -67,6 +70,9 @@ begin
 
 fp_leds <= reg_o.FP_LEDS.val.data;
 ioc_access <= reg_o.ioc_access.data.data(0);
+
+trig2beam_thresh <= reg_o.trigtobeam_thresh.data.data(15 downto 0);
+reg_i.trigtobeam_dly.data.data <= trig2beam_dly;
 
 reg_o_therm.spi_we <= reg_o.therm_spi.data.swmod;
 reg_o_therm.spi_wdata <= reg_o.therm_spi.data.data;
@@ -190,6 +196,12 @@ iocaccess_stretch : entity work.stretch
 	len => 3000000, -- ~25ms;
 	sig_out => ioc_access_led
 );	 
+
+
+
+
+
+
 
 
 

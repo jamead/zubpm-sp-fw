@@ -41,6 +41,7 @@ entity evr_top is
   sa_trig        : out std_logic;
   tst_trig       : out std_logic;
   dma_trig       : out std_logic;
+  dma_trig_nodly : out std_logic;
   gps_trig       : out std_logic;
   timestamp      : out std_logic_vector(63 downto 0);
     
@@ -446,6 +447,23 @@ event_dma : entity work.event_rcv_chan  --EventReceiverChannel
        mypolarity => ('0'),
        trigger => dma_trig
 );
+
+
+-- On demand 	
+event_dma_nodly : entity work.event_rcv_chan  --EventReceiverChannel
+    port map(
+       clock => gth_rxusr_clk,
+       reset => sys_rst,
+       eventstream => eventstream,
+       myevent => dma_trigno, --reg_o.dma_trigno, --trignum,
+       mydelay => 32d"1", 
+       mywidth => (x"00002000"),   -- //creates a pulse about 3us long
+       mypolarity => ('0'),
+       trigger => dma_trig_nodly
+);
+
+
+
 
 
 -- On demand - no delay	

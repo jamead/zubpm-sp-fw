@@ -23,6 +23,7 @@ static void gendata_push(void *unused)
 {
     (void)unused;
     u32 dmastatus;
+    u32 beamdly;
 
     static struct {
     	u32 pll_locked;         //PSC Offset 0
@@ -84,7 +85,9 @@ static void gendata_push(void *unused)
         msg.evr_ts_s_triglat = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_S_LAT_REG));
         msg.evr_ts_ns_triglat = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + EVR_TS_NS_LAT_REG));
         msg.trigtobeam_thresh = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG));
-        msg.trigtobeam_dly = htonl(Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG));
+        beamdly = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG);
+        beamdly = (int)((double)beamdly * EVR_CLOCK_FREQ_HZ / ADC_CLOCK_FREQ_HZ);
+        msg.trigtobeam_dly = htonl(beamdly);
 
         dmastatus = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_STATUS_REG);
         msg.dma_adc_active = htonl((dmastatus & 0x10) >> 4);

@@ -237,6 +237,7 @@ type t_reg_o_dma is record
     txtoioc_done : std_logic;
 end record t_reg_o_dma;
 
+
 type t_reg_i_dma is record
     trig_cnt     : std_logic_vector(31 downto 0); 
     status       : std_logic_vector(4 downto 0);

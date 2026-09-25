@@ -180,7 +180,8 @@ architecture behv of top is
   signal evr_fa_trig     : std_logic;
   signal evr_sa_trig     : std_logic;
   signal evr_gps_trig    : std_logic;
-  signal evr_dma_trig    : std_logic;  
+  signal evr_dma_trig    : std_logic; 
+  signal evr_dma_trig_nodly  : std_logic; 
   signal evr_ts          : std_logic_vector(63 downto 0); 
   signal evr_rcvd_clk    : std_logic;
   signal evr_ref_clk     : std_logic;
@@ -195,10 +196,13 @@ architecture behv of top is
   signal sa_trig_stretch : std_logic;
   signal evr_dma_trig_stretch : std_logic;
   signal dma_trig        : std_logic;
+
   signal tst_trig        : std_logic;
   signal dma_busy        : std_logic;
   
   signal ioc_access_led  : std_logic;
+  signal trig2beam_thresh : std_logic_vector(15 downto 0);
+  signal trig2beam_dly   : std_logic_vector(31 downto 0);
 
 
 
@@ -242,7 +246,7 @@ dbg(19) <= fp_in(3);
 
 
 fp_out(0) <= evr_tbt_trig; --fa_trig; --pl_clk0;
-fp_out(1) <= tst_trig; --tbt_extclk; --afe_sw_rffe_p; --evr_rcvd_clk; 
+fp_out(1) <= evr_dma_trig_nodly; --tst_trig; --tbt_extclk; --afe_sw_rffe_p; --evr_rcvd_clk; 
 fp_out(2) <= evr_dma_trig; --tbt_trig; --adc_clk_in; --adc_clk; 
 fp_out(3) <= tst_trig; --'0'; --evr_rcvd_clk; --sw_rffe_time; --evr_rcvd_clk; --tbt_extclk; --tbt_trig; 
 
@@ -544,21 +548,34 @@ evr: entity work.evr_top
     sa_trig => evr_sa_trig, 
     tst_trig => tst_trig, 
     dma_trig => evr_dma_trig,
+    dma_trig_nodly => evr_dma_trig_nodly,
     gps_trig => evr_gps_trig, 
     timestamp => evr_ts,  
     evr_rcvd_clk => evr_rcvd_clk
 );	
 
-
-
+find_beam : entity work.beam_detect
+  port map (
+    adc_clk     => adc_clk,
+    adc_rst     => pl_reset,
+    trigger     => evr_dma_trig,
+    adc_data    => adc_data,
+    threshold   => trig2beam_thresh,
+    clock_count => trig2beam_dly, 
+    done        => open
+  );
+  
+  
 
 ps_pl: entity work.ps_io
   port map (
     pl_clock => pl_clk0, 
-    pl_reset => not pl_resetn, 
+    pl_reset => pl_reset, 
     m_axi4_m2s => m_axi4_m2s, 
     m_axi4_s2m => m_axi4_s2m, 
     fp_leds => ps_leds,
+    trig2beam_thresh => trig2beam_thresh,
+    trig2beam_dly => trig2beam_dly,
     adc_data => adc_data,
     sa_data => sa_data,
     reg_o_tbt => reg_o_tbt,
