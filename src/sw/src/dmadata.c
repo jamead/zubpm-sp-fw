@@ -314,7 +314,7 @@ static void dmadata_push(void *unused)
         trignum = Xil_In32(XPAR_M_AXI_BASEADDR + DMA_TRIGCNT_REG);
 
         if (trignum != prevtrignum) {
-            xil_printf("Received DMA Trigger Number: %d \r\n",trignum);
+            //xil_printf("Received DMA Trigger Number: %d \r\n",trignum);
 
             //read Kx, Ky (in nm)
             kx = Xil_In32(XPAR_M_AXI_BASEADDR + KX_REG);
@@ -346,12 +346,12 @@ static void dmadata_push(void *unused)
             // Process DMA data into adcmsg array
             read_ADC_dma(adcmsg, adclen);
             thresh = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_THRESH_REG);
-            xil_printf("Read Threshold Reg: %d\r\n",thresh);
+            //xil_printf("Read Threshold Reg: %d\r\n",thresh);
             beamdly = Xil_In32(XPAR_M_AXI_BASEADDR + TRIGTOBEAM_DLY_REG);
-            xil_printf("Beam Delay Reg: %d\r\n",beamdly);
+            //xil_printf("Beam Delay Reg: %d\r\n",beamdly);
             //scale beamdly to EVR clocks (it is in ADC clocks)
             beamdly = (int)((double)beamdly * EVR_CLOCK_FREQ_HZ / ADC_CLOCK_FREQ_HZ);
-            xil_printf("Beam Delay (in EVR clocks): %d\r\n",beamdly);
+            //xil_printf("Beam Delay (in EVR clocks): %d\r\n",beamdly);
 
 
             //s32 signal_start = find_adc_signal_start(adcmsg, adclen, thresh);

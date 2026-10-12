@@ -30,6 +30,7 @@
 
 XIicPs IicPsInstance;	    // Instance of the IIC Device
 XSysMonPsu SysMonInstance;  // Instance of the Sysmon Device
+static XIpiPsu IpiInstance;
 
 
 #define PLATFORM_ZYNQMP
@@ -58,15 +59,61 @@ XIicPs IicPsInstance;	    // Instance of the IIC Device
 XSysMonPsu SysMonInstance;  // Instance of the Sysmon Device
 
 
-//TimerHandle_t xUptimeTimer;  // Timer handle
-//u32 UptimeCounter = 0;  // Uptime counter
+static uint32_t ioc_access_count = 0;
 
 
 
-// Timer callback function
-//void vUptimeTimerCallback(TimerHandle_t xTimer) {
-//    UptimeCounter++;  // Increment uptime counter
-//}
+static XStatus init_xilpm(void)
+{
+    XIpiPsu_Config *IpiCfg;
+    XStatus status;
+
+    IpiCfg = XIpiPsu_LookupConfig(XPAR_XIPIPSU_0_DEVICE_ID);
+
+    if (IpiCfg == NULL) {
+        xil_printf("ERROR: IPI configuration not found\r\n");
+        return XST_FAILURE;
+    }
+
+    status = XIpiPsu_CfgInitialize(&IpiInstance,
+                                   IpiCfg,
+                                   IpiCfg->BaseAddress);
+
+    if (status != XST_SUCCESS) {
+        xil_printf("ERROR: IPI initialization failed: %d\r\n",
+                   status);
+        return status;
+    }
+
+    status = XPm_InitXilpm(&IpiInstance);
+
+    if (status != XST_SUCCESS) {
+        xil_printf("ERROR: XilPM initialization failed: %d\r\n",
+                   status);
+        return status;
+    }
+
+    xil_printf("XilPM initialized\r\n");
+
+    return XST_SUCCESS;
+}
+
+
+
+
+
+
+
+
+
+
+
+uint32_t get_ioc_access_count(void)
+{
+    return __atomic_load_n(&ioc_access_count, __ATOMIC_RELAXED);
+}
+
+
 
 
 
@@ -224,9 +271,15 @@ int main()
     u32 ts_s, ts_ns;
     float temp1, temp2;
     u32 i;
+    XStatus status;
 
 	xil_printf("zuBPM ...\r\n");
     print_firmware_version();
+
+    status = init_xilpm();
+    if (status != XST_SUCCESS) {
+        xil_printf("WARNING: XilPM initialization failed\r\n");
+    }
 
 
 	prog_ad9510();

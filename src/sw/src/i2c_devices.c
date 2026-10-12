@@ -153,6 +153,89 @@ void prog_si571() {
     read_si571();
 }
 
+void save_kxky_eeprom(u32 kx_nm, u32 ky_nm)
+{
+    u8 buf[8];
+
+    // Store as little-endian u32 values
+    buf[0] = (u8)(kx_nm);
+    buf[1] = (u8)(kx_nm >> 8);
+    buf[2] = (u8)(kx_nm >> 16);
+    buf[3] = (u8)(kx_nm >> 24);
+
+    buf[4] = (u8)(ky_nm);
+    buf[5] = (u8)(ky_nm >> 8);
+    buf[6] = (u8)(ky_nm >> 16);
+    buf[7] = (u8)(ky_nm >> 24);
+
+    i2c_eeprom_writeBytes(EEPROM_KX_ADDR, buf, sizeof(buf));
+
+    xil_printf("Saved Kx/Ky to EEPROM\r\n");
+}
+
+
+
+
+
+void ReadEEPROMHardwareSettings(void)
+{
+    u8 rdBuf[8];
+    u8 val;
+
+    u32 kx_nm;
+    u32 ky_nm;
+
+    xil_printf("\r\nReading zuBPM Settings from EEPROM...\r\n");
+
+
+
+    /*
+     * Read Kx and Ky
+     *
+     * Kx: EEPROM_KX_ADDR     - 4 bytes
+     * Ky: EEPROM_KY_ADDR     - 4 bytes
+     */
+    i2c_eeprom_readBytes(EEPROM_KX_ADDR, rdBuf, 8);
+
+    kx_nm = ((u32)rdBuf[0])       |
+            ((u32)rdBuf[1] << 8)  |
+            ((u32)rdBuf[2] << 16) |
+            ((u32)rdBuf[3] << 24);
+
+    ky_nm = ((u32)rdBuf[4])       |
+            ((u32)rdBuf[5] << 8)  |
+            ((u32)rdBuf[6] << 16) |
+            ((u32)rdBuf[7] << 24);
+
+
+    /*
+     * Check for erased / invalid EEPROM values
+     */
+    if ((kx_nm != 0xFFFFFFFF) && (kx_nm != 0)) {
+
+        printf("Kx = %lu nm (%.4f mm)\r\n",
+               (unsigned long)kx_nm,
+               (float)kx_nm / 1000000.0f);
+
+        set_kxky(HOR, kx_nm);
+    }
+    else {
+        xil_printf("Invalid Kx value in EEPROM\r\n");
+    }
+
+
+    if ((ky_nm != 0xFFFFFFFF) && (ky_nm != 0)) {
+
+        printf("Ky = %lu nm (%.4f mm)\r\n",
+               (unsigned long)ky_nm,
+               (float)ky_nm / 1000000.0f);
+
+        set_kxky(VERT, ky_nm);
+    }
+    else {
+        xil_printf("Invalid Ky value in EEPROM\r\n");
+    }
+}
 
 
 
