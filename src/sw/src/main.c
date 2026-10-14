@@ -193,7 +193,8 @@ static void client_msg(void *pvt, psc_client *ckey, uint16_t msgid, uint32_t msg
     (void)pvt;
 
 	//xil_printf("In Client_Msg:  MsgID=%d   MsgLen=%d\r\n",msgid,msglen);
-
+    // Count each IOC message/access event and blink front panel LED.
+    __atomic_add_fetch(&ioc_access_count, 1, __ATOMIC_RELAXED);
 
     //blink front panel LED
     Xil_Out32(XPAR_M_AXI_BASEADDR + IOC_ACCESS_REG, 1);
