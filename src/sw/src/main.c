@@ -364,10 +364,8 @@ int main()
 	Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_TBTBURSTLEN_REG, 10000);
 	Xil_Out32(XPAR_M_AXI_BASEADDR + DMA_FABURSTLEN_REG, 1000);
 
-    // TODO:  This doesn't work
-    //xil_printf("System is about to reset...\n");
-    // Perform the system reset
-    //XPm_ResetAssert(XILPM_RESET_SOFT,XILPM_RESET_ACTION_PULSE);
+	//Get settings from EEPROM and program PL
+	ReadEEPROMHardwareSettings();
 
 
     sys_thread_new("main", realmain, NULL, THREAD_STACKSIZE, DEFAULT_THREAD_PRIO);
